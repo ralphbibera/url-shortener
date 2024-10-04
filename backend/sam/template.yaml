@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 1024
+    Tracing: Active
+    Runtime: provided.al2023
+    Handler: bootstrap
+    Architectures:
+      - x86_64
+
+Resources:
+  CreateShortUrlFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      FunctionName: createShortUrl
+      CodeUri: ../lambda/handlers/createShortUrl
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Effect: "Allow"
+              Action: "*"
+              Resource: "*"
+
+  RedirectShortUrlFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: go1.x
+    Properties:
+      FunctionName: redirectShortUrl
+      CodeUri: ../lambda/handlers/redirectShortUrl
+      Policies:
+        - Version: 2012-10-17
+          Statement:
+            - Effect: "Allow"
+              Action: "*"
+              Resource: "*"
