@@ -1,104 +1,24 @@
 AWSTemplateFormatVersion: 2010-09-09
 Transform: AWS::Serverless-2016-10-31
 
-Globals:
-  Function:
-    Timeout: 30
-    MemorySize: 1024
-    Tracing: Active
-    Runtime: provided.al2023
-    Handler: bootstrap
-    Architectures:
-      - x86_64
-    Environment:
-      Variables:
-        LOG_LEVEL: DEBUG
-
 Resources:
-  ApiGatewayCloudWatchRole:
-    Type: AWS::IAM::Role
+  UrlShortenerApiApplication:
+    Type: AWS::Serverless::Application
     Properties:
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service:
-                - apigateway.amazonaws.com
-            Action: "sts:AssumeRole"
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
-      Path: /
+      Location: ./api.yaml
 
-  ApiGatewayAccount:
-    Type: AWS::ApiGateway::Account
+  UrlShortenerDatabaseApplication:
+    Type: AWS::Serverless::Application
     Properties:
-      CloudWatchRoleArn: !GetAtt ApiGatewayCloudWatchRole.Arn
+      Location: ./database.yaml
 
-  UrlShortenerApi:
-    Type: AWS::Serverless::Api
+  UrlShortenerLambdaApplication:
+    Type: AWS::Serverless::Application
     Properties:
-      StageName: v1
-      OpenApiVersion: 3.0.1
-      Name: url-shortener
-      MethodSettings:
-        - HttpMethod: "*"
-          ResourcePath: "/*"
-          LoggingLevel: INFO
-          DataTraceEnabled: true
-      FailOnWarnings: false
-      AlwaysDeploy: true
-      EndpointConfiguration:
-        Type: REGIONAL
-      AccessLogSetting:
-        DestinationArn: !GetAtt UrlShortenerLogGroup.Arn
-        Format: '{"requestTime":"$context.requestTime","requestId":"$context.requestId","httpMethod":"$context.httpMethod","path":"$context.path","resourcePath":"$context.resourcePath","status":$context.status,"responseLatency":$context.responseLatency}'
+      Location: ./lambda.yaml
+      Parameters:
+        SecretArn: !GetAtt UrlShortenerDatabaseApplication.Outputs.SecretArn
+        Address: !GetAtt UrlShortenerDatabaseApplication.Outputs.Address
+        Port: !GetAtt UrlShortenerDatabaseApplication.Outputs.Port
     DependsOn:
-      - ApiGatewayAccount
-
-  UrlShortenerLogGroup:
-    Type: AWS::Logs::LogGroup
-    DeletionPolicy: Delete
-    UpdateReplacePolicy: Delete
-
-  ShortenUrlFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: go1.x
-    Properties:
-      FunctionName: shortenUrl
-      CodeUri: ../lambda/handlers/shortenUrl
-      Policies:
-        - Version: 2012-10-17
-          Statement:
-            - Effect: "Allow"
-              Action: "*"
-              Resource: "*"
-      Events:
-        ApiEvent:
-          Type: Api
-          Properties:
-            Path: /url/shorten
-            Method: POST
-            RestApiId: !Ref UrlShortenerApi
-
-  RedirectUrlFunction:
-    Type: AWS::Serverless::Function
-    Metadata:
-      BuildMethod: go1.x
-    Properties:
-      FunctionName: redirectUrl
-      CodeUri: ../lambda/handlers/redirectUrl
-      Policies:
-        - Version: 2012-10-17
-          Statement:
-            - Effect: "Allow"
-              Action: "*"
-              Resource: "*"
-      Events:
-        ApiEvent:
-          Type: Api
-          Properties:
-            Path: /url/redirect
-            Method: GET
-            RestApiId: !Ref UrlShortenerApi
+      - UrlShortenerApiApplication

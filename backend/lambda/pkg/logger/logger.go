@@ -3,14 +3,28 @@ package logger
 import (
 	"encoding/json"
 	"log"
+	"os"
 	"strings"
 )
 
-func Log(message string, input any) {
+func Log(input any, message ...string) {
 	byteSlice, err := json.MarshalIndent(input, "", "  ")
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatal(err.Error())
 	}
 	structuredLog := strings.ReplaceAll(string(byteSlice), "\n", "\r")
-	log.Print(message+" ", structuredLog)
+	if len(message) > 0 {
+		log.Print(message[0]+" ", structuredLog)
+	} else {
+		log.Print(structuredLog)
+	}
+}
+
+func Error(err error) {
+	Log(err.Error(), "Error:")
+}
+
+func Fatal(err error) {
+	Log(err.Error(), "Fatal Error:")
+	os.Exit(1)
 }

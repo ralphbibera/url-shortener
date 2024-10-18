@@ -11,9 +11,9 @@ type lambdaFunction[Input any, Output any] func(context context.Context, lambdaI
 
 func Start[Input any, Output any](lambdaFunction lambdaFunction[Input, Output]) {
 	lambda.Start(func(context context.Context, lambdaInput Input) (Output, error) {
-		logger.Log("Lambda Input:", lambdaInput)
+		logger.Log(lambdaInput, "Lambda Input:")
 		response, err := lambdaFunction(context, lambdaInput)
-		logger.Log("Lambda Response:", response)
+		logger.Log(response, "Lambda Response:")
 		return response, err
 	})
 }

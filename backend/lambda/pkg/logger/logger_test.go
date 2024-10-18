@@ -17,7 +17,7 @@ type account struct {
 	Number *int `json:"Number,omitempty"`
 }
 
-func TestLog(t *testing.T) {
+func TestStructuredLog(t *testing.T) {
 	person := person{
 		Id:   aws.String(uuid.NewString()),
 		Name: "Ralph",
@@ -27,5 +27,5 @@ func TestLog(t *testing.T) {
 			},
 		},
 	}
-	Log("Input:", person)
+	Log(person, "Input:")
 }

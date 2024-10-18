@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  UrlShortenerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: postgres inbound, all outbound
+      GroupName: urlshortener
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+
+  UrlShortenerKey:
+    Type: AWS::KMS::Key
+    Properties:
+      MultiRegion: false
+
+  UrlShortenerDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: "20"
+      Engine: postgres
+      DBName: urlshortener
+      DBInstanceIdentifier: urlshortener
+      DBInstanceClass: db.t4g.micro
+      AvailabilityZone: !Select [0, !GetAZs ap-southeast-1]
+      BackupRetentionPeriod: 1
+      MasterUsername: urlshortener
+      ManageMasterUserPassword: true
+      MasterUserSecret:
+        KmsKeyId: !GetAtt UrlShortenerKey.KeyId
+      VPCSecurityGroups:
+        - !GetAtt UrlShortenerSecurityGroup.GroupId
+
+Outputs:
+  SecretArn:
+    Value: !GetAtt UrlShortenerDBInstance.MasterUserSecret.SecretArn
+  Address:
+    Value: !GetAtt UrlShortenerDBInstance.Endpoint.Address
+  Port:
+    Value: !GetAtt UrlShortenerDBInstance.Endpoint.Port
