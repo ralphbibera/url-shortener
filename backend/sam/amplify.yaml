@@ -16,3 +16,20 @@ Resources:
       Name: UrlShortener
       AccessToken: !Ref UrlShortenerAccessToken
       Repository: !Ref UrlShortenerRepository
+      BuildSpec: |
+        version: 1
+        frontend:
+          phases:
+            preBuild:
+              commands:
+                - cd frontend
+                - npm ci
+            build:
+              commands:
+                - npm run build
+                - cd build/compute/default/
+                - npm i --production
+          artifacts:
+            baseDirectory: build
+            files:
+              - '**/*'
